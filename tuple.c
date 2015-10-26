@@ -1,4 +1,5 @@
 #include<stdio.h>
+#include<string.h>
 
 struct tuple {
 	int val;
@@ -6,6 +7,10 @@ struct tuple {
 	int *t_size;
 	struct tuple * before;
 	struct tuple * after; 
+};
+
+struct list{
+	char c, e[9];
 };
 
 struct tuple *create(int * size, int val, struct tuple * before, struct tuple * after){
@@ -96,40 +101,79 @@ struct tuple * read_msg(char * msg){
 struct tuple * build_tree(struct tuple * msg){
 	struct tuple * tree = msg;
 	struct tuple * present = msg;
+	struct tuple * p_tree;
 	while( *tree->t_size > 2 ){
 		struct tuple * next = present->after;
 		//printf("%d:%c\n",next->val,next->val);
 		*tree->t_size -= 2;
-		struct tuple * p_tree = create(tree->t_size,present,present->before,next->after);
+		p_tree = create(tree->t_size,present,present->before,next->after);
 		//struct tuple * temp = p_tree->val;
 		//printf("tree %d\n",temp->val);
 		p_tree->freq = present->freq + next->freq;
 		present->before = 0;
 		next->after = 0;
-		printf("UNSORTED\n");
-		print_t(p_tree);
-		printf("\nSORTED\n");
+		//printf("UNSORTED\n");
+		//print_t(p_tree);
+		//printf("\nSORTED\n");
 		sort(p_tree);
-		print_t(p_tree);
-		putchar('\n');
+		//print_t(p_tree);
+		//putchar('\n');
 		//printf("SUCCESS\n");
 		present = p_tree;
 		//printf("Next val %d:%c\n",present->val,present->val);	
 		
 	}
-	return tree;
+	return p_tree;
+}
+
+void create_list(char bin[],int * j,struct list * encoded,struct tuple *tree){
+	//printf("HI\n");
+	int i = 0, b = 0;
+	for( i = 0; bin[i] != NULL; i++);
+	struct tuple * branch = tree;
+	while(branch != 0){
+		bin[i] = '0' + b;
+		bin[i+1] = NULL;
+		if(branch->val < 256){
+			(encoded+*j)->c = branch->val;
+			bin[i+1] = NULL;
+			strcpy((encoded+*j)->e, bin);
+			//printf("%d\t%c:%s\n",*j,(encoded+*j)->c,(encoded+*j)->e);
+			(*j)++;
+		}
+		else{
+			create_list(bin,j,encoded,branch->val);
+		}
+		b = 1;
+		branch = branch->after;
+	}
+}
+			
+void print_l(struct list *encoded,int size){
+	int i=0;
+	for(i=0;i<size;i++){
+		printf("%c:%s\n",(encoded+i)->c,(encoded+i)->e);
+	}
 }
 
 main(){
-	char message[] = "aaabcdeeeeefg";
+	char message[] = "Perhaps not so easy to see is that there is no ambiguity in this encoding. Any string of zero's and one's will map to a unique string of the characters 'a' to 'g'. This is much more intuitive if we draw a tree for the code table.";
 	struct tuple * msg = read_msg(&message);
 //	print_t(msg);
 //	putchar('\n');
 	sort(msg);
+	int size = *msg->t_size;
 //	print_t(msg);
 //	putchar('\n');
 	struct tuple * tree = build_tree(msg);
-
+	print_t(tree);
+	putchar('\n');
+	struct list * encoded = malloc(sizeof(struct list)*size);
+	char bin[8];
+	bin[0] = NULL;
+	int j = 0;
+	create_list(bin,&j,encoded,tree);
+	print_l(encoded,size);
 }
 
 
