@@ -10,7 +10,7 @@ struct tuple {
 };
 
 struct list{
-	char c, e[9];
+	char c, e[15];
 };
 
 struct tuple *create(int * size, int val, struct tuple * before, struct tuple * after){
@@ -157,46 +157,62 @@ void print_l(struct list *encoded,int size){
 }
 
 
-int encode(char * msg,struct list *encoded,int size,char *e_msg){
-	int i=0,j,l=0;
+void encode(char * msg,struct list *encoded,int size,char *e_msg){
+	int i=0,j;
 	for(i = 0; *(msg+i) != NULL; i++){
 		for(j=0;j<size;j++){
 			if(*(msg+i) == (encoded+j)->c){
 				int k = 0;
 				while((encoded+j)->e[k]!=NULL){
 					//printf("%d\n",k);
-					*(e_msg + l++) = (encoded+j)->e[k++];
+					*(e_msg++) = (encoded+j)->e[k++];
 				}
 				break;
 			}
 		}
 	}
-	return l;
+	*(e_msg)=NULL;
+	return sizeof(e_msg);
+}
+
+void decode(char * msg, struct tuple * tree){
+	struct tuple * branch = tree;
+	while(*msg != NULL){
+		if(*(msg++) == '1'){
+			branch = branch->after;
+		}
+		if(branch->val < 256){
+			putchar(branch->val);
+			branch = tree;
+		}
+		else
+			branch = branch->val;
+	}
 }
 
 main(){
-	char message[] = "Perhaps not so easy to see is that there is no ambiguity in this encoding. Any string of zero's and one's will map to a unique string of the characters 'a' to 'g'. This is much more intuitive if we draw a tree for the code table.";
-	printf("%d\n",sizeof(message));
+	char message[] = "Each character is assigned to a string of 0's and 1's. We're cheating a bit. It's easier to use strings in our program than the actual bits we would use in real life. But see the exercises at the end.\nNotice that the two most common characters, \"a\" and \"e\" are represented by just two bits, whereas the two least common characters \"b\" and \"d\" each use four bits.\nPerhaps not so easy to see is that there is no ambiguity in this encoding. Any string of zero's and one's will map to a unique string of the characters 'a' to 'g'. This is much more intuitive if we draw a tree for the code table.";
+	//printf("%d\n",sizeof(message));
 	char * e_message = malloc(sizeof(message)*8);
-	printf("%d\n",sizeof(e_message));
+	//printf("%d\n",sizeof(e_message));
 	struct tuple * msg = read_msg(&message);
-//	print_t(msg);
-//	putchar('\n');
 	sort(msg);
 	int size = *msg->t_size;
-//	print_t(msg);
-//	putchar('\n');
 	struct tuple * tree = build_tree(msg);
-	print_t(tree);
+	//print_t(tree);
 	putchar('\n');
 	struct list * encoded = malloc(sizeof(struct list)*size);
 	char bin[8];
 	bin[0] = NULL;
 	int j = 0;
 	create_list(bin,&j,encoded,tree);
-	print_l(encoded,size);
-	int e_size = encode(&message,encoded,size,e_message);
-	printf("%s\n%d,%d\n",e_message,sizeof(message),e_size/8);
+	//print_l(encoded,size);
+	printf("ENCODED TEXT\n\n");
+	encode(&message,encoded,size,e_message);
+	printf("%s\n\n",e_message);
+	printf("DECODED TEXT\n\n");
+	decode(e_message,tree);
+	putchar('\n');
 }
 
 
