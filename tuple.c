@@ -10,7 +10,7 @@ struct tuple {
 
 struct tuple *create(int * size, int val, struct tuple * before, struct tuple * after){
 	struct tuple *new = malloc(sizeof(struct tuple));
-	*size++;
+	(*size)++;
 	new->freq = 1;
 	new->t_size = size;
 	new->val = val;
@@ -32,9 +32,12 @@ void print_t(struct tuple * first){
 	struct tuple * next = first;
 	printf("(");
 	while( next != 0){
+		//printf("%c:%d\n",next->val,next->val);
+		//printf("%d:",next->freq);
 		if(next->val < 256)
-			printf("(%d,%c),",next->freq,next->val);
+			printf("%c,",next->val);
 		else{
+			//printf("(%d,",next->freq);
 			print_t(next->val);
 			printf(",");
 		}
@@ -64,39 +67,70 @@ void sort(struct tuple * first){
 		smallest->val = temp_val;
 		smallest->freq = temp_freq;
 		present = present->after;
+		smallest = present;
+		//printf("SORTING.....\n");
+		//print_t(first);
+		//putchar('\n');
 	}
 }
 
-
-		
-
-main(){
-	char msg[] = "Hello";// how are you? How do you do?";
-	int size = 0;
+struct tuple * read_msg(char * msg){
+	int *size = malloc(sizeof(int));
+	*size = 0;
 	int i;
-	struct tuple *first = create(&size, msg[0], 0, 0);
+	struct tuple *first = create(size, *msg, 0, 0);
 	struct tuple *last = first;
-	for(i = 1; i < sizeof(msg)-1; i++){
-		struct tuple * check = check_t(msg[i], first);
+	for(i = 1; *(msg+i) != NULL; i++){
+		struct tuple * check = check_t(*(msg+i), first);
 		if(check != 0)
 			check->freq ++;
 		else{
-			struct tuple *next = create(&size, msg[i], last, 0);
+			struct tuple *next = create(size, *(msg+i), last, 0);
 			last->after = next;
 			last = next;
 		}
 	}
-	print_t(first);
-	putchar('\n');
-	sort(first);
-	print_t(first);
-	putchar('\n');
+	return first;
 }
 
+struct tuple * build_tree(struct tuple * msg){
+	struct tuple * tree = msg;
+	struct tuple * present = msg;
+	while( *tree->t_size > 2 ){
+		struct tuple * next = present->after;
+		//printf("%d:%c\n",next->val,next->val);
+		*tree->t_size -= 2;
+		struct tuple * p_tree = create(tree->t_size,present,present->before,next->after);
+		//struct tuple * temp = p_tree->val;
+		//printf("tree %d\n",temp->val);
+		p_tree->freq = present->freq + next->freq;
+		present->before = 0;
+		next->after = 0;
+		printf("UNSORTED\n");
+		print_t(p_tree);
+		printf("\nSORTED\n");
+		sort(p_tree);
+		print_t(p_tree);
+		putchar('\n');
+		//printf("SUCCESS\n");
+		present = p_tree;
+		//printf("Next val %d:%c\n",present->val,present->val);	
+		
+	}
+	return tree;
+}
 
+main(){
+	char message[] = "aaabcdeeeeefg";
+	struct tuple * msg = read_msg(&message);
+//	print_t(msg);
+//	putchar('\n');
+	sort(msg);
+//	print_t(msg);
+//	putchar('\n');
+	struct tuple * tree = build_tree(msg);
 
-
-
+}
 
 
 
